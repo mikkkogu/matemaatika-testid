@@ -17,17 +17,34 @@ all_topics = sorted(df['topic'].unique().tolist())
 # --- SIDEBAR: SEADED ---
 st.sidebar.title("🛠️ Seaded")
 
-# Teema valik (CSS manipuleerimine)
 theme_choice = st.sidebar.radio("Vali teema:", ["Tume", "Hele"])
+
 if theme_choice == "Hele":
     st.markdown("""
         <style>
-        .stApp { background-color: #ffffff; color: #000000; }
-        .stMarkdown, .stText, p { color: #000000 !important; }
+        /* Põhitaust valgeks */
+        .stApp {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+        }
+        
+        /* Külgriba taust helehalliks (Streamliti standardne hele teema) */
+        [data-testid="stSidebar"] {
+            background-color: #f0f2f6 !important;
+        }
+        
+        /* Kõik tekstid, sildid ja pealkirjad mustaks nii põhialas kui külgribal */
+        .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3, 
+        [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
+            color: #000000 !important;
+        }
+
+        /* Raadionuppude tekstid */
+        div[data-testid="stMarkdownContainer"] p {
+            color: #000000 !important;
+        }
         </style>
     """, unsafe_allow_html=True)
-
-st.sidebar.divider()
 
 # Raskusaste
 level = st.sidebar.select_slider(
