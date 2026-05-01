@@ -9,7 +9,7 @@ st.set_page_config(page_title="Matemaatika Enesekontroll", page_icon="🧮", lay
 @st.cache_data
 def load_data():
     # Kasutame sinu uut 110 küsimusega faili
-    return pd.read_csv("matemaatika_testid_100.csv")
+    return pd.read_csv("matemaatika_testid.csv")
 
 df = load_data()
 all_topics = sorted(df['topic'].unique().tolist())
