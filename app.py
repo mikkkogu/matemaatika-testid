@@ -2,69 +2,97 @@ import streamlit as st
 import pandas as pd
 import random
 
-st.set_page_config(page_title="Matemaatika Enesekontroll", page_icon="🧮")
+st.set_page_config(page_title="Matemaatika Enesekontroll", page_icon="🧮", layout="wide")
 
-# 1. Funktsioon küsimuste laadimiseks
+# 1. Funktsioon andmete laadimiseks
 @st.cache_data
-def load_questions():
-    df = pd.read_csv("matemaatika_testid.csv")
-    return df.to_dict('records')
+def load_data():
+    return pd.read_csv("matemaatika_testid.csv")
 
-all_questions = load_questions()
+df = load_data()
+all_topics = sorted(df['topic'].unique().tolist())
 
-st.title("🧮 Matemaatika Test")
-st.write("Sulle valitakse juhuslikult 10 küsimust kursuse materjalidest.")
+# --- SIDEBAR: Teemade valik ---
+st.sidebar.title("Seaded")
+selected_topics = st.sidebar.multiselect(
+    "Vali teemad harjutamiseks:", 
+    options=all_topics,
+    default=[] # Tühi tähendab "kõik"
+)
 
-# 2. Sessiooni haldus: valime 10 random küsimust ja hoiame neid seal
-if 'random_questions' not in st.session_state:
-    st.session_state.random_questions = random.sample(all_questions, min(10, len(all_questions)))
+# Filtreerime andmed vastavalt valikule
+if selected_topics:
+    filtered_df = df[df['topic'].isin(selected_topics)]
+else:
+    filtered_df = df
+
+st.sidebar.info(f"Valikus on {len(filtered_df)} küsimust.")
+
+# --- TESTI GENEREERIMISE LOOGIKA ---
+if 'current_test' not in st.session_state or st.sidebar.button("Genereeri uus test"):
+    # Valime 10 juhuslikku (või vähem, kui andmeid on vähe)
+    n_to_sample = min(10, len(filtered_df))
+    st.session_state.current_test = filtered_df.sample(n=n_to_sample).to_dict('records')
     st.session_state.submitted = False
 
-# Nupp uue testi alustamiseks
-if st.button("Genereeri uus test"):
-    st.session_state.random_questions = random.sample(all_questions, min(10, len(all_questions)))
-    st.session_state.submitted = False
-    st.rerun()
+# --- PÕHIEKRAAN ---
+st.title("🧮 Matemaatika enesekontrolli test")
+st.write(f"Sulle on koostatud test **{len(st.session_state.current_test)}** küsimusega.")
 
-# 3. Testi vorm
-with st.form("math_test"):
-    user_answers = []
-    for i, q in enumerate(st.session_state.random_questions):
-        st.subheader(f"{i+1}. {q['question']}")
-        st.caption(f"Teema: {q['topic']}")
+# Kasutame vormi, et kõik vastused korraga saata
+with st.form("test_form"):
+    user_answers = {}
+    
+    for i, q in enumerate(st.session_state.current_test):
+        st.markdown(f"### {i+1}. {q['question']}")
         
-        # Segame vastusevariandid, et need poleks alati samas järjekorras
+        # Kuvame teema märgise
+        st.caption(f"📍 Teema: {q['topic']}")
+        
+        # Vastusevariandid
         options = [q['option_a'], q['option_b'], q['option_c'], q['option_d']]
         
-        ans = st.radio(f"Vali vastus:", options, key=f"q{i}")
-        user_answers.append(ans)
+        # Raadionupud vastamiseks
+        user_answers[i] = st.radio(
+            "Vali üks variant:", 
+            options, 
+            key=f"radio_{i}",
+            index=None # Alustab ilma valikuta
+        )
         
-        with st.expander("Vihje"):
-            st.write(q['hint'])
+        # --- KOHAPEALNE TAGASISIDE ---
+        # See ilmub alles siis, kui vorm on saadetud
+        if st.session_state.get('submitted'):
+            if user_answers[i] == q['correct_answer']:
+                st.success(f"✅ Õige!")
+            else:
+                st.error(f"❌ Vale. Õige vastus on: **{q['correct_answer']}**")
+                with st.expander("Vihje / Selgitus"):
+                    st.write(q['hint'])
+        
         st.divider()
 
-    submit = st.form_submit_button("KONTROLLI TULEMUSI")
+    submit_button = st.form_submit_button("KONTROLLI VASTUSEID")
 
-# 4. Tulemuste kuvamine
-if submit:
+# --- TULEMUSTE KOKKUVÕTE ---
+if submit_button:
     st.session_state.submitted = True
-    score = 0
-    for i, q in enumerate(st.session_state.random_questions):
+    
+    # Arvutame skoori
+    correct_count = 0
+    for i, q in enumerate(st.session_state.current_test):
         if user_answers[i] == q['correct_answer']:
-            score += 1
-            st.success(f"Küsimus {i+1}: Õige!")
-        else:
-            st.error(f"Küsimus {i+1}: Vale. Õige vastus: {q['correct_answer']}")
+            correct_count += 1
+            
+    score_percent = int((correct_count / len(st.session_state.current_test)) * 100)
     
-    percent = (score / len(st.session_state.random_questions)) * 100
-    st.metric("Sinu skoor", f"{score} / {len(st.session_state.random_questions)}", f"{percent}%")
+    st.subheader("Testi tulemus")
+    col1, col2 = st.columns(2)
+    col1.metric("Õigeid vastuseid", f"{correct_count} / {len(st.session_state.current_test)}")
+    col2.metric("Protsent", f"{score_percent}%")
     
-    if score == len(st.session_state.random_questions):
+    if score_percent == 100:
         st.balloons()
-        st.success("Täiuslik tulemus! Oled kontrolltööks valmis.")
-    elif score > 7:
-        st.info("Väga hea töö!")
-    else:
-        st.warning("Tasub veel materjale sirvida.")
-
-st.sidebar.markdown("### Info\nSee rakendus kasutab `matemaatika_testid.csv` andmebaasi.")
+    
+    # Kuna Streamlit vajab uuesti laadimist, et "submitted" olek näitaks tagasisidet küsimuste juures:
+    st.rerun()
