@@ -22,26 +22,48 @@ theme_choice = st.sidebar.radio("Vali teema:", ["Tume", "Hele"])
 if theme_choice == "Hele":
     st.markdown("""
         <style>
-        /* Põhitaust valgeks */
+        /* 1. Üldine taust ja tekst */
         .stApp {
             background-color: #ffffff !important;
             color: #000000 !important;
         }
         
-        /* Külgriba taust helehalliks (Streamliti standardne hele teema) */
+        /* 2. Külgriba taust */
         [data-testid="stSidebar"] {
-            background-color: #f0f2f6 !important;
+            background-color: #f8f9fb !important;
         }
         
-        /* Kõik tekstid, sildid ja pealkirjad mustaks nii põhialas kui külgribal */
+        /* 3. Tekstid ja sildid mustaks (kõikjal) */
         .stApp p, .stApp span, .stApp label, .stApp h1, .stApp h2, .stApp h3, 
         [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
             color: #000000 !important;
         }
 
-        /* Raadionuppude tekstid */
+        /* 4. NUPUD (Tavalised ja Vormi nupud) */
+        /* See muudab nupu tausta heledaks ja teksti mustaks */
+        div.stButton > button, div.stFormSubmitButton > button {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            border: 1px solid #cccccc !important;
+            box-shadow: 0px 1px 2px rgba(0,0,0,0.1) !important;
+        }
+
+        /* Nupu välimus hiirega peale minnes (hover) */
+        div.stButton > button:hover, div.stFormSubmitButton > button:hover {
+            border-color: #000000 !important;
+            background-color: #f0f2f6 !important;
+            color: #000000 !important;
+        }
+
+        /* 5. Raadionuppude (valikuvastuste) konteiner */
         div[data-testid="stMarkdownContainer"] p {
             color: #000000 !important;
+        }
+        
+        /* 6. Expanderi (vihje) pealkiri mustaks */
+        .streamlit-expanderHeader {
+            color: #000000 !important;
+            background-color: #f0f2f6 !important;
         }
         </style>
     """, unsafe_allow_html=True)
