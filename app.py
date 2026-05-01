@@ -141,22 +141,28 @@ if submit_clicked or st.session_state.submitted:
             st.session_state.confirmed_incomplete = True
             st.rerun()
     else:
+# Arvutame tulemused
         st.session_state.submitted = True
         correct_count = sum(1 for i, q in enumerate(st.session_state.current_test) if user_answers[i] == q['correct_answer'])
         score_percent = (correct_count / len(st.session_state.current_test)) * 100
         
-        if score_percent >= 91: grade, color = "A", "green"
-        elif score_percent >= 81: grade, color = "blue"
-        elif score_percent >= 71: grade, color = "blue"
-        elif score_percent >= 61: grade, color = "orange"
-        elif score_percent >= 51: grade, color = "orange"
-        else: grade, color = "F", "red"
+        # Hinde ja värvi määramine (veaparandusega)
+        if score_percent >= 91: 
+            grade, color = "A", "green"
+        elif score_percent >= 81: 
+            grade, color = "B", "blue"
+        elif score_percent >= 71: 
+            grade, color = "C", "blue"
+        elif score_percent >= 61: 
+            grade, color = "D", "orange"
+        elif score_percent >= 51: 
+            grade, color = "E", "orange"
+        else: 
+            grade, color = "F", "red"
 
-        st.subheader("Lõpptulemus")
+        # Kuvame hinde ja tulemuse
+        st.subheader("Sinu koondtulemus")
         c1, c2, c3 = st.columns(3)
         c1.metric("Punktid", f"{correct_count} / {len(st.session_state.current_test)}")
         c2.metric("Protsent", f"{int(score_percent)}%")
         c3.metric("HINNE", grade)
-        
-        if grade != "F":
-            st.balloons()
