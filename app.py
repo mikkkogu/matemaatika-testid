@@ -9,7 +9,7 @@ st.set_page_config(page_title="Matemaatika Enesekontroll", page_icon="🧮", lay
 @st.cache_data
 def load_data():
     try:
-        return pd.read_csv("matemaatika_testid_100.csv")
+        return pd.read_csv("matemaatika_testid.csv")
     except FileNotFoundError:
         st.error("❌ Faili 'matemaatika_testid_100.csv' ei leitud! Kontrolli GitHubi.")
         st.stop()
